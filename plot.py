@@ -39,7 +39,7 @@ def plot_comparison(expected_output, predicted_output, plot_num=1, algorithm="k-
         plot_num = len(predicted_output)
     font = FontProperties(fname='C:\Windows\Fonts\simsun.ttc', size=12)
     font_title = FontProperties(fname='C:\Windows\Fonts\simsun.ttc', size=14)
-    plot_name = u"2008/06/01-2008/06/30预测用电负荷 vs.实际用电负荷：zone-"
+    plot_name = u"2008/06/17-2008/06/30预测用电负荷 vs.实际用电负荷：zone-"
     legend_name = [u"实际用电负荷", u"预测用电负荷"+str(algorithm)]
     for i in range(plot_num):
         index = i + 1

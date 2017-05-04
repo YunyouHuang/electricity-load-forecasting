@@ -20,8 +20,8 @@ def pre_processing_data(series):
         x_data.append(series[x])
         y_data.append(np.mean(series[x+1]))
 
-    # 将2008/06/01-2008/06/30用电负荷数据作为测试数据
-    cut_off = len(series)-30*24
+    # 将2008/06/17-2008/06/30用电负荷数据作为测试数据
+    cut_off = len(series)-2*7*24
     x_train = x_data[0:cut_off]
     y_train = y_data[0:cut_off]
     x_test = x_data[cut_off:]

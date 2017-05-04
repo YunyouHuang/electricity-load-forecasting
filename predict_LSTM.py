@@ -111,9 +111,9 @@ def main():
     predicted_output = np.concatenate((predicted_output, predicted_temp), axis=1)
     expected_output = np.concatenate((expected_output, expected_temp), axis=1)
 
-    # 将2008/06/01-2008/06/30用电负荷数据作为测试数据
-    predict_future = predicted_output[-1-30*24:-1]
-    expect_future = expected_output[-1-30*24:-1]
+    # 将2008/06/17-2008/06/30用电负荷数据作为测试数据
+    predict_future = predicted_output[-1-7*2*24:-1]
+    expect_future = expected_output[-1-7*2*24:-1]
     predict_future = predict_future.reshape(len(predict_future), 21)
     expect_future = expect_future.reshape(len(expect_future), 21)
 

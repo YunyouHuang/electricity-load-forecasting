@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 import xgboost as xgb
 
+
 '''
 使用XGBoost模型进行预测
 '''
@@ -58,8 +59,8 @@ def pre_processing_data():
     # 将时间-用电负荷-温度数据进行连接
     time_load_temperature = pd.concat([time_load, data_load, temperature], axis=1)
 
-    # 将2008/06/01-2008/06/30用电负荷数据作为测试数据
-    data_test = data_load.tail(354).head(30*24)
+    # 将2008/06/24-2008/06/30用电负荷数据作为测试数据
+    data_test = data_load.tail(354).head(2*7*24)
     data_test = np.exp(data_test) - 1
 
     print "Done"
@@ -174,13 +175,13 @@ def prediction(index, x_test, x_test_lag, model):
     dtest = xgb.DMatrix(x_test)
     y_predict = model.predict(dtest)
     y_predict = y_predict[index]
-    x_test_lag.ix[168+index, 4] = y_predict
+    x_test_lag.ix[168*2+index, 4] = y_predict
 
     load = pd.Series(x_test_lag['load'])
     lag_load = pd.concat([load.shift(j) for j in [1,2,3,24]], axis=1)
     lag_load.columns = ['lag_t-%d' %j for j in [1,2,3,24]]
     lag_load = pd.concat([load, lag_load], axis=1)
-    lag_load = lag_load.tail(len(lag_load)-168)
+    lag_load = lag_load.tail(len(lag_load)-168*2)
 
     test = x_test
     test['lag_t-1'] = lag_load['lag_t-1']
@@ -198,9 +199,9 @@ def matching_zone_station(data, zone_id, station_id):
 
     x_train = train[features].head(39222)
     y_train = train.load.head(39222)
-    x_test = train[features].tail(354+168).head(168+168)
-    x_test = x_test.tail(len(x_test) - 168)
-    x_test_lag = data.tail(354+168).head(168+168)
+    x_test = train[features].tail(354+168*2).head((168+168)*2)
+    x_test = x_test.tail(len(x_test) - 168*2)
+    x_test_lag = data.tail(354+168*2).head((168+168)*2)
 
     # 设置XGBoost模型参数
     xgb_params = {"objective": "reg:linear",
@@ -214,7 +215,7 @@ def matching_zone_station(data, zone_id, station_id):
 
     # 用测试数据进行预测
     predict = []
-    for i in range(0, 168):
+    for i in range(0, 168*2):
         y_predict, test, test_lag = prediction(i, x_test, x_test_lag, model)
         y_predict = np.exp(y_predict) - 1
         predict.append(y_predict)
@@ -235,7 +236,7 @@ def fit_zone_station(data, data_test, zone_id):
     print "zone", zone_id, ":"
     print mse
     fit_station = mse.index(min(mse)) + 1
-    print "fit zone:", fit_station
+    print "fit station:", fit_station
 
     return fit_station
 
@@ -267,11 +268,11 @@ def main():
     '''
     # 合并特征数据
     fit_data = merge_features(combine_zones)
-    '''
+
     pre1 = pd.DataFrame(matching_zone_station(fit_data, 1, 2))
     pre2 = pd.DataFrame(matching_zone_station(fit_data, 2, 11))
     pre3 = pd.DataFrame(matching_zone_station(fit_data, 3, 11))
-    pre4 = pd.DataFrame(matching_zone_station(fit_data, 4, 9))
+    pre4 = pd.DataFrame(matching_zone_station(fit_data, 4, 3))
     pre5 = pd.DataFrame(matching_zone_station(fit_data, 5, 11))
     pre6 = pd.DataFrame(matching_zone_station(fit_data, 6, 11))
     pre7 = pd.DataFrame(matching_zone_station(fit_data, 7, 11))
@@ -297,17 +298,19 @@ def main():
         predict = matching_zone_station(fit_data, zone_id, fit_station)
         predict = pd.DataFrame(predict)
         predict_future = pd.concat([predict_future, predict], axis=1)
+    '''
+
     predict_future = predict_future.ix[:, [0, 11, 13, 14, 15, 16, 17, 18, 19, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12]]
+    predict_future = pd.DataFrame(predict_future)
 
     # 计算20个区域总的用电负荷
     predict_total = np.zeros((len(predict_future), 1))
     expect_total = np.zeros((len(predict_future), 1))
     for i in range(len(predict_future)):
-        predict_total[i][0] = np.sum(predict_future.iloc[i, :])
-        expect_total[i][0] = np.sum(expect_future.iloc[i, :])
+        predict_total[i][0] = np.sum(predict_future.ix[i])
+        expect_total[i][0] = np.sum(expect_future.ix[i])
     predict_future = np.concatenate((predict_future, predict_total), axis=1)
     expect_future = np.concatenate((expect_future, expect_total), axis=1)
-
 
     # 计算误差
     for i in range(0, 21):
