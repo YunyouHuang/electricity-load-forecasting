@@ -172,8 +172,8 @@ def merge_features(combine_zones):
 
 # 用测试数据进行预测
 def prediction(index, x_test, x_test_lag, model):
-    dtest = xgb.DMatrix(x_test)
-    y_predict = model.predict(dtest)
+    d_test = xgb.DMatrix(x_test)
+    y_predict = model.predict(d_test)
     y_predict = y_predict[index]
     x_test_lag.ix[168*2+index, 4] = y_predict
 
@@ -210,10 +210,10 @@ def matching_zone_station(data, zone_id, station_id):
                   "seed": 42,
                   "silent": 1}
     num_rounds = 1000
-    dtrain = xgb.DMatrix(x_train, label=y_train)
-    model = xgb.train(xgb_params, dtrain, num_rounds)
+    d_train = xgb.DMatrix(x_train, label=y_train)
+    model = xgb.train(xgb_params, d_train, num_rounds)
 
-    # 用测试数据进行预测
+    # 对2008/06/17-2008/06/30的用电负荷进行预测
     predict = []
     for i in range(0, 168*2):
         y_predict, test, test_lag = prediction(i, x_test, x_test_lag, model)
@@ -245,7 +245,7 @@ def main():
     # 获取训练数据
     time_load_temperature, expect_future = pre_processing_data()
     features, x_train, y_train, combine_zones = set_training_data(time_load_temperature)
-    '''
+
     # 构建特征图
     create_feature_map(features)
     # 设置XGBoost模型参数
@@ -265,14 +265,16 @@ def main():
     df['fscore'] = df['fscore'] / df['fscore'].sum()
     # 显示特征相对排名
     plot.plot_feature(df)
-    '''
+
     # 合并特征数据
     fit_data = merge_features(combine_zones)
 
+    '''
+    # Test
     pre1 = pd.DataFrame(matching_zone_station(fit_data, 1, 2))
     pre2 = pd.DataFrame(matching_zone_station(fit_data, 2, 11))
     pre3 = pd.DataFrame(matching_zone_station(fit_data, 3, 11))
-    pre4 = pd.DataFrame(matching_zone_station(fit_data, 4, 3))
+    pre4 = pd.DataFrame(matching_zone_station(fit_data, 4, 9))
     pre5 = pd.DataFrame(matching_zone_station(fit_data, 5, 11))
     pre6 = pd.DataFrame(matching_zone_station(fit_data, 6, 11))
     pre7 = pd.DataFrame(matching_zone_station(fit_data, 7, 11))
@@ -292,13 +294,13 @@ def main():
     predict_future = pd.concat([pre1,pre2,pre3,pre4,pre5,pre6,pre7,pre8,pre9,pre10,
                       pre11,pre12,pre13,pre14,pre15,pre16,pre17,pre18,pre19,pre20], axis=1)
     '''
+
     predict_future = pd.DataFrame()
     for zone_id in range(1, 21):
         fit_station = fit_zone_station(fit_data, expect_future, zone_id)
         predict = matching_zone_station(fit_data, zone_id, fit_station)
         predict = pd.DataFrame(predict)
         predict_future = pd.concat([predict_future, predict], axis=1)
-    '''
 
     predict_future = predict_future.ix[:, [0, 11, 13, 14, 15, 16, 17, 18, 19, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12]]
     predict_future = pd.DataFrame(predict_future)
@@ -307,8 +309,8 @@ def main():
     predict_total = np.zeros((len(predict_future), 1))
     expect_total = np.zeros((len(predict_future), 1))
     for i in range(len(predict_future)):
-        predict_total[i][0] = np.sum(predict_future.ix[i])
-        expect_total[i][0] = np.sum(expect_future.ix[i])
+        predict_total[i][0] = np.sum(predict_future.iloc[i])
+        expect_total[i][0] = np.sum(expect_future.iloc[i])
     predict_future = np.concatenate((predict_future, predict_total), axis=1)
     expect_future = np.concatenate((expect_future, expect_total), axis=1)
 

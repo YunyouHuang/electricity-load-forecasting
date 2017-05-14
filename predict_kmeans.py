@@ -13,22 +13,20 @@ from scipy.cluster.vq import kmeans
 
 
 # 对用电负荷数据进行预处理
-def pre_processing_data(series):
+def pre_processing_data(time, series):
     x_data = []
     y_data = []
-    for x in range(len(series)-1):
-        x_data.append(series[x])
-        y_data.append(np.mean(series[x+1]))
+    for x in range(len(series)):
+        x_data.append(time[x])
+        y_data.append(series[x])
 
     # 将2008/06/17-2008/06/30用电负荷数据作为测试数据
-    cut_off = len(series)-2*7*24
+    cut_off = len(series)-2*7*24-18
     x_train = x_data[0:cut_off]
     y_train = y_data[0:cut_off]
-    x_test = x_data[cut_off:]
-    y_test = y_data[cut_off:]
+    x_test = x_data[cut_off:-18]
+    y_test = y_data[cut_off:-18]
 
-    x_train = [np.log(x+1) for x in x_train]
-    x_test = [np.log(x+1) for x in x_test]
     y_train = [np.log(y+1) for y in y_train]
 
     # 消除时间序列的趋势项
@@ -44,6 +42,7 @@ def pre_processing_data(series):
         residual = y_train[val] - pred
         detrend.append(residual)
     y_train = detrend
+
     return x_train, y_train, x_test, y_test, test_indices, slope, intercept
 
 
@@ -51,7 +50,7 @@ def pre_processing_data(series):
 def kmeans_clustering(x, k):
     data = np.asarray(x)
     # 计算质心
-    centroids = kmeans(data, k, iter=20)[0]
+    centroids = kmeans(data, k, iter=10)[0]
     # 重计算标签
     labels = []
     for y in range(len(x)):
@@ -87,7 +86,7 @@ def predict_clustering(clusters, cluster_sets, x_test):
         pred = 0.0
         normalizer = 0.0
         for example in examples:
-            if distance.euclidean(x, example[0])==0:
+            if distance.euclidean(x, example[0]) == 0:
                 similarity = 10000.0
             else:
                 similarity = 1.0/distance.euclidean(x, example[0])
@@ -98,9 +97,9 @@ def predict_clustering(clusters, cluster_sets, x_test):
 
 
 # 对每个区域用电负荷进行预处理与预测
-def clustering(zone_id, series):
+def clustering(zone_id, time, series):
     print "zone", zone_id, ":"
-    x_train, y_train, x_test, y_test, test_indices, slope, intercept = pre_processing_data(series)
+    x_train, y_train, x_test, y_test, test_indices, slope, intercept = pre_processing_data(time, series)
     # 计算质心和标签
     centroids_k_7, labels_k_7 = kmeans_clustering(x_train, 7)
     centroids_k_24, labels_k_24 = kmeans_clustering(x_train, 24)
@@ -127,23 +126,25 @@ def clustering(zone_id, series):
 
         predicts = trend_predict
         # 计算误差
-        mse = stats.mean_squared_error(y_test, trend_predict)
-        nrmse = stats.normalized_rmse(y_test, trend_predict)
-        mape = stats.mape(y_test, trend_predict)
+        mse = stats.mean_squared_error(y_test, predicts)
+        nrmse = stats.normalized_rmse(y_test, predicts)
+        mape = stats.mape(y_test, predicts)
         print alg_names[i], ":", "mse:", mse, "  nrmse:", nrmse, "  mape:", mape
 
-        plot.plot_comparison(y_test, predicts, plot_num=1, algorithm=alg_names[i], zone_id=zone_id)
+        plot.plot_clustering(y_test, predicts, algorithm=alg_names[i], zone_id=zone_id)
 
 
 def main():
     # 读取用电负荷数据集
     length_load, time_load, load = load_data.read_load_history(is_full=True)
-    load = load.reshape(len(load), 20)
+    time_load = time_load.reshape(length_load, 4)
+    time_load = time_load[:, 1:]
+    load = load.reshape(length_load, 20)
 
     # 对每个区域用电负荷进行预处理与预测
-    for zone_id in range(1, 21):
+    for zone_id in range(18, 21):
         zone_load_series = load[:, zone_id-1]
-        clustering(zone_id, zone_load_series)
+        clustering(zone_id, time_load, zone_load_series)
 
 
 if __name__ == "__main__":

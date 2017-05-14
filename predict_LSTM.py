@@ -42,10 +42,11 @@ def set_training_data():
     inputs_full = inputs_full.reshape((len(inputs_full), 1, 35))
 
     load = load.reshape(len(load), 20)
-    inputs_full = inputs_full[0:39414]
-    inputs = inputs_full[0:39414 - 24*7]
-    outputs_full = load[0:39414]
-    outputs = load[0:39414 - 24*7]
+    # inputs_full = inputs_full[0:39414]
+    inputs = inputs_full[0:len(load) - 24*7]
+    # outputs_full = load[0:39414]
+    outputs_full = load
+    outputs = load[0:len(load) - 24*7]
 
     print "Full inputs shape:", inputs_full.shape
     print "Full outputs shape:", outputs_full.shape
@@ -100,8 +101,10 @@ def main():
     print "Predicting..."
     model.reset_states()
     predicted_output = model.predict(inputs_full, batch_size=batch_size)
+
     predicted_output = de_normalization(mean_load, std_load, predicted_output, if_log=True)
     expected_output = de_normalization(mean_load, std_load, outputs_full, if_log=True)
+
     # 计算20个区域总的用电负荷
     predicted_temp = np.zeros((len(predicted_output), 1))
     expected_temp = np.zeros((len(expected_output), 1))
@@ -112,13 +115,10 @@ def main():
     expected_output = np.concatenate((expected_output, expected_temp), axis=1)
 
     # 将2008/06/17-2008/06/30用电负荷数据作为测试数据
-    predict_future = predicted_output[-1-7*2*24:-1]
-    expect_future = expected_output[-1-7*2*24:-1]
+    predict_future = predicted_output[-1-7*2*24-18:-18]
+    expect_future = expected_output[-1-7*2*24-18:-18]
     predict_future = predict_future.reshape(len(predict_future), 21)
     expect_future = expect_future.reshape(len(expect_future), 21)
-
-    print "expect_future:"
-    print expect_future
 
     # 计算误差
     for i in range(0, 21):
