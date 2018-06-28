@@ -269,33 +269,6 @@ def main():
 
     # 合并特征数据
     fit_data = merge_features(combine_zones)
-
-    '''
-    # Test
-    pre1 = pd.DataFrame(matching_zone_station(fit_data, 1, 2))
-    pre2 = pd.DataFrame(matching_zone_station(fit_data, 2, 11))
-    pre3 = pd.DataFrame(matching_zone_station(fit_data, 3, 11))
-    pre4 = pd.DataFrame(matching_zone_station(fit_data, 4, 9))
-    pre5 = pd.DataFrame(matching_zone_station(fit_data, 5, 11))
-    pre6 = pd.DataFrame(matching_zone_station(fit_data, 6, 11))
-    pre7 = pd.DataFrame(matching_zone_station(fit_data, 7, 11))
-    pre8 = pd.DataFrame(matching_zone_station(fit_data, 8, 2))
-    pre9 = pd.DataFrame(matching_zone_station(fit_data, 9, 6))
-    pre10 = pd.DataFrame(matching_zone_station(fit_data, 10, 1))
-    pre11 = pd.DataFrame(matching_zone_station(fit_data, 11, 1))
-    pre12 = pd.DataFrame(matching_zone_station(fit_data, 12, 3))
-    pre13 = pd.DataFrame(matching_zone_station(fit_data, 13, 2))
-    pre14 = pd.DataFrame(matching_zone_station(fit_data, 14, 4))
-    pre15 = pd.DataFrame(matching_zone_station(fit_data, 15, 8))
-    pre16 = pd.DataFrame(matching_zone_station(fit_data, 16, 3))
-    pre17 = pd.DataFrame(matching_zone_station(fit_data, 17, 6))
-    pre18 = pd.DataFrame(matching_zone_station(fit_data, 18, 3))
-    pre19 = pd.DataFrame(matching_zone_station(fit_data, 19, 6))
-    pre20 = pd.DataFrame(matching_zone_station(fit_data, 20, 11))
-    predict_future = pd.concat([pre1,pre2,pre3,pre4,pre5,pre6,pre7,pre8,pre9,pre10,
-                      pre11,pre12,pre13,pre14,pre15,pre16,pre17,pre18,pre19,pre20], axis=1)
-    '''
-
     predict_future = pd.DataFrame()
     for zone_id in range(1, 21):
         fit_station = fit_zone_station(fit_data, expect_future, zone_id)

@@ -6,8 +6,8 @@ import numpy as np
 from keras.models import Sequential
 from keras.layers.core import Dense
 from keras.layers.recurrent import LSTM
-from cleansing_data import normalization
-from cleansing_data import de_normalization
+from clean_data import normalization
+from clean_data import de_normalization
 
 '''
 使用有状态LSTM神经网络模型进行预测
